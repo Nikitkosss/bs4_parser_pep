@@ -108,21 +108,19 @@ def pep(session):
     response = session.get(PEP_URL)
     response.encoding = 'utf-8'
     soup = BeautifulSoup(response.text, features='lxml')
-
-    index_category = soup.find(
+    pep_block = soup.find(
         'section',
         attrs={'id': 'numerical-index'}
         ).find('tbody').find_all('tr')
     count_status = {}
     results = [('Статус', 'Количество')]
-    for href in tqdm(index_category, desc='Обработка страниц.'):
+    for href in tqdm(pep_block):
         status = href.find('td').text[1:]
         piece_of_link = href.find('a')['href']
-        pep_link = urljoin(PEP_URL, piece_of_link)
-        response = session.get(pep_link)
+        link = urljoin(PEP_URL, piece_of_link)
+        response = session.get(link)
         response.encoding = 'utf-8'
         soup = BeautifulSoup(response.text, features='lxml')
-
         field_list = soup.find(
             'dl', class_='field-list'
         )
@@ -132,7 +130,7 @@ def pep(session):
         if pep_status.text not in EXPECTED_STATUS[status]:
             logging.info(
                 '\nНесовпадающие статусы:\n'
-                f'{pep_link}\n'
+                f'{link}\n'
                 f'Статус в карточке: {pep_status.text}\n'
                 f'Ожидаемые статусы: {EXPECTED_STATUS[status]}\n'
             )
