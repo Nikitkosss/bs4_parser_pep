@@ -31,7 +31,7 @@ def whats_new(session):
         sections_by_python = div_with_ul.find_all(
             'li', attrs={'class': 'toctree-l1'}
             )
-        results = [('Ссылка на статью', 'Заголовок', 'Редактор, автор')]
+        results = list(('Ссылка на статью', 'Заголовок', 'Редактор, автор'))
         for section in tqdm(sections_by_python):
             version_a_tag = find_tag(section, 'a')
             href = version_a_tag['href']
@@ -124,7 +124,7 @@ def pep(session):
         field_list = soup.find(
             'dl', class_='field-list'
         )
-        pep_status = field_list['abbr']
+        pep_status = field_list.find('abbr')
         count_status[pep_status.text] = count_status.get(
             pep_status.text, 0) + 1
         if pep_status.text not in EXPECTED_STATUS[status]:
