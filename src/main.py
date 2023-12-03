@@ -114,9 +114,9 @@ def pep(session):
         ).find('tbody').find_all('tr')
     count_status = {}
     results = [('Статус', 'Количество')]
-    for href in tqdm(pep_block):
-        status = href.find('td').text[1:]
-        piece_of_link = href.find('a')['href']
+    for item in tqdm(pep_block):
+        status = item.find('td').text[1:]
+        piece_of_link = item.find('a')['href']
         link = urljoin(PEP_URL, piece_of_link)
         response = session.get(link)
         response.encoding = 'utf-8'
@@ -124,7 +124,7 @@ def pep(session):
         field_list = soup.find(
             'dl', class_='field-list'
         )
-        pep_status = field_list.abbr
+        pep_status = field_list['abbr']
         count_status[pep_status.text] = count_status.get(
             pep_status.text, 0) + 1
         if pep_status.text not in EXPECTED_STATUS[status]:
