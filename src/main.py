@@ -112,7 +112,7 @@ def pep(session):
     count_status = {}
     results = [('Статус', 'Количество')]
     for item in tqdm(pep_block):
-        status = item.find('td').text[1:]
+        status = find_tag(item, 'td').text[1:]
         piece_of_link = find_tag(item, 'a')['href']
         link = urljoin(PEP_URL, piece_of_link)
         response = session.get(link)
