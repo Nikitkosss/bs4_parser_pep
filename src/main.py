@@ -95,27 +95,26 @@ def download(session):
     downloads_dir = BASE_DIR / 'downloads'
     downloads_dir.mkdir(exist_ok=True)
     archive_path = downloads_dir / filename
-    response = session.get(archive_url)
+    response = get_response(session, archive_url)
     with open(archive_path, 'wb') as file:
         file.write(response.content)
     logging.info(f'Архив был загружен и сохранён: {archive_path}')
 
 
 def pep(session):
-    response = session.get(PEP_URL)
+    response = get_response(session, PEP_URL)
     response.encoding = 'utf-8'
     soup = BeautifulSoup(response.text, features='lxml')
-    pep_block = soup.find(
-        'section',
-        attrs={'id': 'numerical-index'}
-        ).find('tbody').find_all('tr')
+    pep_section = find_tag(soup, 'section', {'id': 'numerical-index'})
+    pep_block = find_tag(pep_section, 'tbody').find_all('tr')
     count_status = {}
     results = [('Статус', 'Количество')]
+    logs = []
     for item in tqdm(pep_block):
         status = find_tag(item, 'td').text[1:]
         piece_of_link = find_tag(item, 'a')['href']
         link = urljoin(PEP_URL, piece_of_link)
-        response = session.get(link)
+        response = get_response(session, link)
         response.encoding = 'utf-8'
         soup = BeautifulSoup(response.text, features='lxml')
         field_list = find_tag(soup, 'dl', {'class': 'field-list'})
@@ -123,14 +122,15 @@ def pep(session):
         count_status[pep_status.text] = count_status.get(
             pep_status.text, 0) + 1
         if pep_status.text not in EXPECTED_STATUS[status]:
-            logging.info(
+            logs.append(
                 '\nНесовпадающие статусы:\n'
                 f'{link}\n'
                 f'Статус в карточке: {pep_status.text}\n'
                 f'Ожидаемые статусы: {EXPECTED_STATUS[status]}\n'
             )
-    for count in count_status:
-        results.append((count, count_status[count]))
+    log_text = '\n'.join(logs)
+    logging.info(log_text)
+    results.extend((count, count_status[count]) for count in count_status)
     results.append(('Всего', sum(count_status.values())))
     return results
 
